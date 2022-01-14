@@ -2,7 +2,7 @@ import unittest
 from gridable import Grid
 
 
-class TestNode(unittest.TestCase):
+class TestCell(unittest.TestCase):
     def test_equals_true(self):
         grid = Grid()
         grid[-10] = 5
@@ -104,7 +104,7 @@ class TestNode(unittest.TestCase):
 
         self.assertFalse(8 in grid)
 
-    def test_not_suscriptable(self):
+    def test_not_subscriptable(self):
         grid = Grid()
         grid[10] = 5
 

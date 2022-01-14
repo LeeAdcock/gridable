@@ -1,10 +1,23 @@
 class Cell:
     """Class representing the grid."""
 
-    def __init__(self, _root=None, _children=[None, {}], _location=()):
+    def __init__(self, _root=None, _parent=None, _children=None, _location=()):
+        self._parent = _parent
         self._children = _children
         self._root = _root if _root else self
         self._location = _location
+
+    def _persist(self, index):
+        if self._parent:
+            self._children = self._parent._persist(self._location[-1])
+
+        if self._children is None:
+            self._children = {}
+
+        if index not in self._children:
+            self._children[index] = {}
+
+        return self._children[index]
 
     def __setitem__(self, index, value):
         if isinstance(value, list):
@@ -15,7 +28,6 @@ class Cell:
                 stop = index.stop or index.start + (len(value) * step) - 1
 
                 if (stop - start) / step + 1 != len(value):
-                    print((stop - start) / step, len(value))
                     raise Exception(
                         "Invalid slice size",
                     )
@@ -34,71 +46,79 @@ class Cell:
                     self[index][value_index] = value
 
         else:
-            if index not in self._children[1]:
-                self._children[1][index] = [value, {}]
-            else:
-                self._children[1][index][0] = value
+            if self._children is None:
+                if self._parent:
+                    self._children = self._parent._persist(self._location[-1])
+                else:
+                    self._root = {}
+                    self._children = {}
+            self._children[index] = value
 
     def __delitem__(self, index):
-        del self._children[1][index]
+        if isinstance(self._children, dict):
+            del self._children[index]
 
     def __getitem__(self, index):
         if isinstance(index, slice):
             step = index.step or 1
-            start = index.start or min(self._children[1].keys())
-            stop = index.stop or max(self._children[1].keys())
+            start = index.start or min(self._children.keys())
+            stop = index.stop or max(self._children.keys())
             return [self[value_index] for value_index in range(start, stop + 1, step)]
         else:
-            if index not in self._children[1]:
-                if self._children[0] is not None:
-                    raise Exception("Object is not subscriptable")
-                self._children[1][index] = [
-                    None,
-                    {},
-                ]  # wait to set this until we are storing a value?
-            return Cell(self._root, self._children[1][index], self._location + (index,))
+            if self._children is None:
+                return Cell(self._root, self, None, self._location + (index,))
+            else:
+                if isinstance(self._children, dict):
+                    return Cell(
+                        self._root,
+                        self,
+                        self._children[index] if index in self._children else None,
+                        self._location + (index,),
+                    )
+                else:
+                    raise Exception("Not subspcriptable")
 
     def __iter__(self):
-        if self._children[1]:
-            for index in self._children[1].keys():
+        if isinstance(self._children, dict):
+            for index in self._children.keys():
                 yield from Cell(
-                    self._root, self._children[1][index], self._location + (index,)
+                    self._root, self, self._children[index], self._location + (index,)
                 ).__iter__()
         else:
             yield self
 
     def __len__(self):
-        return len(self._children[1])
+        return len(self._children) if isinstance(self._children, dict) else 1
 
     def __contains__(self, index):
-        if index in self._children[1]:
-            return True
-        for value in self._children[1].values():
-            if value[0] == index:
+        if isinstance(self._children, dict):
+            if index in self._children:
                 return True
-        return False
+            for value in self._children.values():
+                if value == index:
+                    return True
+            return False
+        else:
+            return index == self._children
 
     def __str__(self):
-        if self._children[1]:
-            return (
-                "["
-                + ",".join(
-                    [
-                        Cell(
-                            self._root,
-                            self._children[1][index],
-                            self._location + (index,),
-                        ).__str__()
-                        for index in self._children[1].keys()
-                    ]
-                )
-                + "]"
-            )
-        else:
-            return str(self._children[0])
+        return str(self._children)
 
     def value(self):
-        return self._children[0]
+        if isinstance(self._children, dict):
+            return None  # error?
+        else:
+            return self._children
+
+    def size(self):
+        def _get_size(value):
+            size = 0
+            if isinstance(value, dict):
+                for child in value.values():
+                    size += _get_size(child) if isinstance(child, dict) else 1
+            return size
+
+        return _get_size(self._children)
 
     def coordinate(self):
         return self._location
@@ -117,7 +137,7 @@ class Cell:
         if isinstance(other, Cell):
             return self._children == other._children
         else:
-            return self._children[0] == other
+            return self._children == other
 
     def neighbors(self, include_empty=True, distance=1):
         def _neighbors(cell, location, index):
@@ -139,4 +159,14 @@ class Grid(Cell):
     """Class representing the grid."""
 
     def __init__(self):
-        super().__init__(self, _children=(None, {}), _location=())
+        super().__init__(self, _children=None, _location=())
+
+
+grid = Grid()
+# grid[5] = [2, 3]
+# grid[5][2] = 4
+grid[6][1] = 4
+print(grid[6][1])
+
+print(grid._children)
+print("size", grid.size())
