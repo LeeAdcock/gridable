@@ -123,7 +123,7 @@ class TestCell(unittest.TestCase):
 
         self.assertFalse(8 in grid)
 
-    def test_not_subscriptable(self):
+    def test_error_when_not_subscriptable(self):
         grid = Grid()
         grid[10] = 5
 

@@ -6,7 +6,7 @@ _readers = 0
 _writers = 0
 
 
-def GraphModifyLock(func):
+def GridModifyLock(func):
     """Lock for modification, reading operations will block."""
 
     def inner(*args, **kwargs):
@@ -39,7 +39,7 @@ def GraphModifyLock(func):
     return inner
 
 
-def GraphReadLock(func):
+def GridReadLock(func):
     """Lock for reading, modification operations will block."""
 
     def inner(*args, **kwargs):

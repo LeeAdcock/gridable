@@ -1,3 +1,3 @@
-from gridable.threadlock import GraphModifyLock, GraphReadLock
+from gridable.threadlock import GridModifyLock, GridReadLock
 
 from gridable.grid import Grid

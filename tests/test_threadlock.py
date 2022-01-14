@@ -1,6 +1,6 @@
 import unittest, threading, queue, time
 
-from gridable import GraphModifyLock, GraphReadLock
+from gridable import GridModifyLock, GridReadLock
 
 
 class TestThreadLock(unittest.TestCase):
@@ -27,11 +27,11 @@ class TestThreadLock(unittest.TestCase):
         def do_fail():
             raise Exception()
 
-        self.do_safe_writing = GraphModifyLock(do_writing)
-        self.do_safe_reading = GraphReadLock(do_reading)
+        self.do_safe_writing = GridModifyLock(do_writing)
+        self.do_safe_reading = GridReadLock(do_reading)
 
-        self.do_safe_writing_fail = GraphModifyLock(do_fail)
-        self.do_safe_reading_fail = GraphReadLock(do_fail)
+        self.do_safe_writing_fail = GridModifyLock(do_fail)
+        self.do_safe_reading_fail = GridReadLock(do_fail)
 
         def worker():
             while True:

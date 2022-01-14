@@ -53,7 +53,7 @@ class TestNodeSlices(unittest.TestCase):
         grid = Grid()
         grid[0] = [1, 2, 3, 4, 5]
 
-        out = grid[0][3:]
+        out = list(grid[0][3:])
 
         self.assertEqual(len(out), 2)
         self.assertEqual(out[0].value(), 4)
@@ -63,7 +63,7 @@ class TestNodeSlices(unittest.TestCase):
         grid = Grid()
         grid[0] = [1, 2, 3, 4, 5]
 
-        out = grid[0][:2]
+        out = list(grid[0][:2])
 
         self.assertEqual(len(out), 3)
         self.assertEqual(out[0].value(), 1)
@@ -74,7 +74,7 @@ class TestNodeSlices(unittest.TestCase):
         grid = Grid()
         grid[0] = [1, 2, 3, 4, 5]
 
-        out = grid[0][::2]
+        out = list(grid[0][::2])
 
         self.assertEqual(len(out), 3)
         self.assertEqual(out[0].value(), 1)
