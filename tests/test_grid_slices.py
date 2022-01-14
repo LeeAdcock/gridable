@@ -80,3 +80,12 @@ class TestNodeSlices(unittest.TestCase):
         self.assertEqual(out[0].value(), 1)
         self.assertEqual(out[1].value(), 3)
         self.assertEqual(out[2].value(), 5)
+
+    def test_put_iterable_slice(self):
+        grid = Grid()
+        grid[0][10:] = range(5, 7)
+
+        print(grid._root)
+
+        self.assertEqual(grid[0][10].value(), 5)
+        self.assertEqual(grid[0][11].value(), 6)

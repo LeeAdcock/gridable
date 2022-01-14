@@ -1,5 +1,6 @@
 from gridable.threadlock import GridModifyLock, GridReadLock
 import functools
+from collections.abc import Iterable
 
 
 class Cell:
@@ -9,11 +10,10 @@ class Cell:
         self._root = _root
         self._coordinates = _coordinates
 
-    """Sets the content of a grid cell."""
-
     @GridModifyLock
     def __setitem__(self, index, value):
-        if isinstance(value, list):
+        """Sets the content of a grid cell."""
+        if isinstance(value, Iterable):
 
             if isinstance(index, slice):
                 step = index.step or 1
@@ -25,15 +25,14 @@ class Cell:
                         "Invalid slice size",
                     )
 
-                indexes = list(
+                for (source_index, destination_index) in enumerate(
                     range(
                         start,
                         stop + 1,
                         step,
                     )
-                )
-                for (value_index, value) in enumerate(value):
-                    self[indexes[value_index]] = value
+                ):
+                    self[destination_index] = value[source_index]
             else:
                 for (value_index, value) in enumerate(value):
                     self[index][value_index] = value
@@ -42,15 +41,13 @@ class Cell:
             self._persist()
             self._get_content()[index] = value
 
-    """Deletes the contents of a grid cell."""
-
     @GridModifyLock
     def __delitem__(self, index):
+        """Deletes the contents of a grid cell."""
         del self._get_content()[index]
 
-    """Get the contents of a grid cell."""
-
     def __getitem__(self, index):
+        """Get the contents of a grid cell."""
         content = self._get_content()
         if isinstance(index, slice):
             step = index.step or 1
@@ -68,10 +65,10 @@ class Cell:
                 raise Exception("Not subscriptable")
             return Cell(self._root, self._coordinates + (index,))
 
-    """ Creates a generator that returns nested grid cells """
-
     @GridReadLock
     def __iter__(self):
+        """Creates a generator that returns nested grid cells"""
+
         def generator(root, value, location):
             if isinstance(value, dict):
                 for index in value:
@@ -81,26 +78,24 @@ class Cell:
 
         yield from generator(self._root, self._get_content(), self._coordinates)
 
-    """ Returns the number of included values. Specifically does not count None values."""
-
     @GridReadLock
     def __len__(self):
+        """Returns the number of included values. Specifically does not count None values."""
         content = self._get_content()
         return len(content) if isinstance(content, dict) else 1
 
-    """ Returns a boolean indicating if the provided value is within nested grid cells"""
-
     @GridReadLock
     def __contains__(self, index):
+        """Returns a boolean indicating if the provided value is within nested grid cells"""
         content = self._get_content()
         if not isinstance(content, dict):
             return False
         return (index in content) or (index in content.values())
 
-    """ Return a string representation of this cell"""
-
     @GridReadLock
     def __str__(self):
+        """Return a string representation of this cell"""
+
         def crawl_str(content):
             return (
                 str(content)
@@ -110,10 +105,9 @@ class Cell:
 
         return crawl_str(self._get_content())
 
-    """ Return a boolean indicating if this cell is equal to another cell or its value. """
-
     @GridReadLock
     def __eq__(self, other):
+        """Return a boolean indicating if this cell is equal to another cell or its value."""
         content = self._get_content()
         return (
             content == other._get_content()
@@ -121,39 +115,34 @@ class Cell:
             else content == other
         )
 
-    """ Get the inner persisted value at the current cell location, or None if it isn't persisted. """
-
     def _get_content(self):
+        """Get the inner persisted value at the current cell location, or None if it isn't persisted."""
         return functools.reduce(
             lambda a, b: a[b] if a is not None and b in a else None,
             (self._root,) + self._coordinates,
         )
 
-    """ Persist the location of the current cell to enable storing its value. """
-
     @GridModifyLock
     def _persist(self):
+        """Persist the location of the current cell to enable storing its value."""
         cursor = self._root
         for value in self._coordinates:
             if value not in cursor:
                 cursor[value] = {}
             cursor = cursor[value]
 
-    """ Returns the value stored in the current cell, or None. """
-
     @GridReadLock
     def value(self):
+        """Returns the value stored in the current cell, or None."""
         content = self._get_content()
         return content if not isinstance(content, dict) else None
 
-    """ Returns the coordinates of the current cell, or None. """
-
     def coordinates(self):
+        """Returns the coordinates of the current cell, or None."""
         return self._coordinates
 
-    """ Returns the grid distance between coordinates of the current and provided cell. """
-
     def distance(self, cell):
+        """Returns the grid distance between coordinates of the current and provided cell."""
         if not len(self._coordinates) == len(cell._coordinates):
             raise Exception("Unequal number of dimensions")
         return sum(
@@ -163,9 +152,9 @@ class Cell:
             ]
         )
 
-    """ Returns a generator that provides all neighboring cells at the given distance"""
-
     def neighbors(self, include_empty=True, distance=1):
+        """Returns a generator that provides all neighboring cells at the given distance"""
+
         def _neighbors(cell, location, index):
             if index > len(location) - 1:
                 if cell.value() is not None or include_empty:

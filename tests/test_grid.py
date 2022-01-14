@@ -173,3 +173,12 @@ class TestCell(unittest.TestCase):
         self.assertEqual(grid[0][2][0].value(), 31)
         self.assertEqual(grid[0][2][1].value(), 32)
         self.assertEqual(grid[0][2][2].value(), 33)
+
+    def test_sett_iterable(self):
+        grid = Grid()
+        grid[0] = range(5, 7)
+
+        print(grid._root)
+
+        self.assertEqual(grid[0][0].value(), 5)
+        self.assertEqual(grid[0][1].value(), 6)
