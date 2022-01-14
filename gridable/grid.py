@@ -4,19 +4,19 @@ import functools
 class Cell:
     """Class representing a location in the grid."""
 
-    def __init__(self, _root, _location=()):
+    def __init__(self, _root, _coordinates=()):
         self._root = _root
-        self._location = _location
+        self._coordinates = _coordinates
 
     def _get_value(self):
         return functools.reduce(
             lambda a, b: a[b] if a is not None and b in a else None,
-            (self._root,) + self._location,
+            (self._root,) + self._coordinates,
         )
 
     def _persist(self):
         cursor = self._root
-        for value in self._location:
+        for value in self._coordinates:
             if value not in cursor:
                 cursor[value] = {}
             cursor = cursor[value]
@@ -64,7 +64,7 @@ class Cell:
         else:
             if value is not None and not isinstance(value, dict):
                 raise Exception("Not subscriptable")
-            return Cell(self._root, self._location + (index,))
+            return Cell(self._root, self._coordinates + (index,))
 
     def __iter__(self):
         def _crawl(root, value, location):
@@ -74,7 +74,7 @@ class Cell:
             else:
                 yield Cell(root, location)
 
-        yield from _crawl(self._root, self._get_value(), self._location)
+        yield from _crawl(self._root, self._get_value(), self._coordinates)
 
     def __len__(self):
         data = self._get_value()
@@ -87,7 +87,14 @@ class Cell:
         return (index in data) or (index in data.values())
 
     def __str__(self):
-        return str(self.value())
+        def _crawl_str(data):
+            return (
+                str(data)
+                if not isinstance(data, dict)
+                else "[" + ",".join([_crawl_str(x) for x in data.values()]) + "]"
+            )
+
+        return _crawl_str(self._get_value())
 
     def __eq__(self, other):
         data = self._get_value()
@@ -98,15 +105,15 @@ class Cell:
         return value if not isinstance(value, dict) else None
 
     def coordinates(self):
-        return self._location
+        return self._coordinates
 
     def distance(self, cell):
-        if not len(self._location) == len(cell._location):
+        if not len(self._coordinates) == len(cell._coordinates):
             raise Exception("Unequal number of dimensions")
         return sum(
             [
-                abs(self._location[index] - cell._location[index])
-                for index, value in enumerate(self._location)
+                abs(self._coordinates[index] - cell._coordinates[index])
+                for index, value in enumerate(self._coordinates)
             ]
         )
 
@@ -117,13 +124,13 @@ class Cell:
                     yield cell
             else:
                 for delta in range(-distance, distance + 1):
-                    new_location = list(location)
-                    new_location[index] += delta
+                    new_coordinates = list(location)
+                    new_coordinates[index] += delta
                     yield from _neighbors(
-                        cell[new_location[index]], new_location, index + 1
+                        cell[new_coordinates[index]], new_coordinates, index + 1
                     )
 
-        yield from _neighbors(self._root, self._location, 0)
+        yield from _neighbors(self._root, self._coordinates, 0)
 
 
 class Grid(Cell):
