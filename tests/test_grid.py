@@ -34,9 +34,9 @@ class TestCell(unittest.TestCase):
     def test_coordinates(self):
         grid = Grid()
 
-        self.assertEqual(grid[10].coordinate(), (10,))
-        self.assertEqual(grid[10][5].coordinate(), (10, 5))
-        self.assertEqual(grid[10][5][1].coordinate(), (10, 5, 1))
+        self.assertEqual(grid[10].coordinates(), (10,))
+        self.assertEqual(grid[10][5].coordinates(), (10, 5))
+        self.assertEqual(grid[10][5][1].coordinates(), (10, 5, 1))
 
     def test_one_dimension(self):
         grid = Grid()
@@ -57,15 +57,6 @@ class TestCell(unittest.TestCase):
 
     def test_iterate(self):
         grid = Grid()
-        grid[10][11] = 7
-
-        values = list(grid)
-
-        self.assertEqual(values[10][11].value(), 7)
-        self.assertEqual(values[10].value(), None)
-
-    def test_iterate(self):
-        grid = Grid()
         grid[-10] = 5
         grid[0] = 6
         grid[10] = 7
@@ -73,9 +64,15 @@ class TestCell(unittest.TestCase):
         values = list(grid)
 
         self.assertEqual(len(values), 3)
+
         self.assertEqual(values[0].value(), 5)
+        self.assertEqual(values[0].coordinates(), (-10,))
+
         self.assertEqual(values[1].value(), 6)
+        self.assertEqual(values[1].coordinates(), (0,))
+
         self.assertEqual(values[2].value(), 7)
+        self.assertEqual(values[2].coordinates(), (10,))
 
     def test_len(self):
         grid = Grid()

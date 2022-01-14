@@ -67,12 +67,14 @@ class Cell:
             return Cell(self._root, self._location + (index,))
 
     def __iter__(self):
-        value = self._get_value()
-        if isinstance(value, dict):
-            for index in value.keys():
-                yield from Cell(self._root, self._location + (index,)).__iter__()
-        else:
-            yield self
+        def _crawl(root, value, location):
+            if isinstance(value, dict):
+                for index in value:
+                    yield from _crawl(root, value[index], location + (index,))
+            else:
+                yield Cell(root, location)
+
+        yield from _crawl(self._root, self._get_value(), self._location)
 
     def __len__(self):
         data = self._get_value()
@@ -80,6 +82,8 @@ class Cell:
 
     def __contains__(self, index):
         data = self._get_value()
+        if not isinstance(data, dict):
+            return False
         return (index in data) or (index in data.values())
 
     def __str__(self):
@@ -93,7 +97,7 @@ class Cell:
         value = self._get_value()
         return value if not isinstance(value, dict) else None
 
-    def coordinate(self):
+    def coordinates(self):
         return self._location
 
     def distance(self, cell):
@@ -127,9 +131,3 @@ class Grid(Cell):
 
     def __init__(self):
         super().__init__(_root={})
-
-
-grid = Grid()
-grid[1][2] = 3
-
-print(grid)
