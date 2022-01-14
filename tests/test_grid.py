@@ -57,6 +57,15 @@ class TestCell(unittest.TestCase):
 
     def test_iterate(self):
         grid = Grid()
+        grid[10][11] = 7
+
+        values = list(grid)
+
+        self.assertEqual(values[10][11].value(), 7)
+        self.assertEqual(values[10].value(), None)
+
+    def test_iterate(self):
+        grid = Grid()
         grid[-10] = 5
         grid[0] = 6
         grid[10] = 7

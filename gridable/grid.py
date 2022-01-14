@@ -1,23 +1,25 @@
-class Cell:
-    """Class representing the grid."""
+import functools
 
-    def __init__(self, _root=None, _parent=None, _children=None, _location=()):
-        self._parent = _parent
-        self._children = _children
-        self._root = _root if _root else self
+
+class Cell:
+    """Class representing a location in the grid."""
+
+    def __init__(self, _root, _location=()):
+        self._root = _root
         self._location = _location
 
-    def _persist(self, index):
-        if self._parent:
-            self._children = self._parent._persist(self._location[-1])
+    def _get_value(self):
+        return functools.reduce(
+            lambda a, b: a[b] if a is not None and b in a else None,
+            (self._root,) + self._location,
+        )
 
-        if self._children is None:
-            self._children = {}
-
-        if index not in self._children:
-            self._children[index] = {}
-
-        return self._children[index]
+    def _persist(self):
+        cursor = self._root
+        for value in self._location:
+            if value not in cursor:
+                cursor[value] = {}
+            cursor = cursor[value]
 
     def __setitem__(self, index, value):
         if isinstance(value, list):
@@ -46,79 +48,50 @@ class Cell:
                     self[index][value_index] = value
 
         else:
-            if self._children is None:
-                if self._parent:
-                    self._children = self._parent._persist(self._location[-1])
-                else:
-                    self._root = {}
-                    self._children = {}
-            self._children[index] = value
+            self._persist()
+            self._get_value()[index] = value
 
     def __delitem__(self, index):
-        if isinstance(self._children, dict):
-            del self._children[index]
+        del self._get_value()[index]
 
     def __getitem__(self, index):
+        value = self._get_value()
         if isinstance(index, slice):
             step = index.step or 1
-            start = index.start or min(self._children.keys())
-            stop = index.stop or max(self._children.keys())
+            start = index.start or min(value.keys())
+            stop = index.stop or max(value.keys())
             return [self[value_index] for value_index in range(start, stop + 1, step)]
         else:
-            if self._children is None:
-                return Cell(self._root, self, None, self._location + (index,))
-            else:
-                if isinstance(self._children, dict):
-                    return Cell(
-                        self._root,
-                        self,
-                        self._children[index] if index in self._children else None,
-                        self._location + (index,),
-                    )
-                else:
-                    raise Exception("Not subspcriptable")
+            if value is not None and not isinstance(value, dict):
+                raise Exception("Not subscriptable")
+            return Cell(self._root, self._location + (index,))
 
     def __iter__(self):
-        if isinstance(self._children, dict):
-            for index in self._children.keys():
-                yield from Cell(
-                    self._root, self, self._children[index], self._location + (index,)
-                ).__iter__()
+        value = self._get_value()
+        if isinstance(value, dict):
+            for index in value.keys():
+                yield from Cell(self._root, self._location + (index,)).__iter__()
         else:
             yield self
 
     def __len__(self):
-        return len(self._children) if isinstance(self._children, dict) else 1
+        data = self._get_value()
+        return len(data) if isinstance(data, dict) else 1
 
     def __contains__(self, index):
-        if isinstance(self._children, dict):
-            if index in self._children:
-                return True
-            for value in self._children.values():
-                if value == index:
-                    return True
-            return False
-        else:
-            return index == self._children
+        data = self._get_value()
+        return (index in data) or (index in data.values())
 
     def __str__(self):
-        return str(self._children)
+        return str(self.value())
+
+    def __eq__(self, other):
+        data = self._get_value()
+        return data == other._get_value() if isinstance(other, Cell) else data == other
 
     def value(self):
-        if isinstance(self._children, dict):
-            return None  # error?
-        else:
-            return self._children
-
-    def size(self):
-        def _get_size(value):
-            size = 0
-            if isinstance(value, dict):
-                for child in value.values():
-                    size += _get_size(child) if isinstance(child, dict) else 1
-            return size
-
-        return _get_size(self._children)
+        value = self._get_value()
+        return value if not isinstance(value, dict) else None
 
     def coordinate(self):
         return self._location
@@ -132,12 +105,6 @@ class Cell:
                 for index, value in enumerate(self._location)
             ]
         )
-
-    def __eq__(self, other):
-        if isinstance(other, Cell):
-            return self._children == other._children
-        else:
-            return self._children == other
 
     def neighbors(self, include_empty=True, distance=1):
         def _neighbors(cell, location, index):
@@ -159,14 +126,10 @@ class Grid(Cell):
     """Class representing the grid."""
 
     def __init__(self):
-        super().__init__(self, _children=None, _location=())
+        super().__init__(_root={})
 
 
 grid = Grid()
-# grid[5] = [2, 3]
-# grid[5][2] = 4
-grid[6][1] = 4
-print(grid[6][1])
+grid[1][2] = 3
 
-print(grid._children)
-print("size", grid.size())
+print(grid)
