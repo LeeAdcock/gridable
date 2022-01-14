@@ -8,19 +8,6 @@ class Cell:
         self._root = _root
         self._coordinates = _coordinates
 
-    def _get_value(self):
-        return functools.reduce(
-            lambda a, b: a[b] if a is not None and b in a else None,
-            (self._root,) + self._coordinates,
-        )
-
-    def _persist(self):
-        cursor = self._root
-        for value in self._coordinates:
-            if value not in cursor:
-                cursor[value] = {}
-            cursor = cursor[value]
-
     def __setitem__(self, index, value):
         if isinstance(value, list):
 
@@ -49,20 +36,20 @@ class Cell:
 
         else:
             self._persist()
-            self._get_value()[index] = value
+            self._get_content()[index] = value
 
     def __delitem__(self, index):
-        del self._get_value()[index]
+        del self._get_content()[index]
 
     def __getitem__(self, index):
-        value = self._get_value()
+        content = self._get_content()
         if isinstance(index, slice):
             step = index.step or 1
-            start = index.start or min(value.keys())
-            stop = index.stop or max(value.keys())
+            start = index.start or min(content.keys())
+            stop = index.stop or max(content.keys())
             return [self[value_index] for value_index in range(start, stop + 1, step)]
         else:
-            if value is not None and not isinstance(value, dict):
+            if content is not None and not isinstance(content, dict):
                 raise Exception("Not subscriptable")
             return Cell(self._root, self._coordinates + (index,))
 
@@ -74,35 +61,52 @@ class Cell:
             else:
                 yield Cell(root, location)
 
-        yield from _crawl(self._root, self._get_value(), self._coordinates)
+        yield from _crawl(self._root, self._get_content(), self._coordinates)
 
     def __len__(self):
-        data = self._get_value()
-        return len(data) if isinstance(data, dict) else 1
+        content = self._get_content()
+        return len(content) if isinstance(content, dict) else 1
 
     def __contains__(self, index):
-        data = self._get_value()
-        if not isinstance(data, dict):
+        content = self._get_content()
+        if not isinstance(content, dict):
             return False
-        return (index in data) or (index in data.values())
+        return (index in content) or (index in content.values())
 
     def __str__(self):
-        def _crawl_str(data):
+        def _crawl_str(content):
             return (
-                str(data)
-                if not isinstance(data, dict)
-                else "[" + ",".join([_crawl_str(x) for x in data.values()]) + "]"
+                str(content)
+                if not isinstance(content, dict)
+                else "[" + ",".join([_crawl_str(x) for x in content.values()]) + "]"
             )
 
-        return _crawl_str(self._get_value())
+        return _crawl_str(self._get_content())
 
     def __eq__(self, other):
-        data = self._get_value()
-        return data == other._get_value() if isinstance(other, Cell) else data == other
+        content = self._get_content()
+        return (
+            content == other._get_content()
+            if isinstance(other, Cell)
+            else content == other
+        )
+
+    def _get_content(self):
+        return functools.reduce(
+            lambda a, b: a[b] if a is not None and b in a else None,
+            (self._root,) + self._coordinates,
+        )
+
+    def _persist(self):
+        cursor = self._root
+        for value in self._coordinates:
+            if value not in cursor:
+                cursor[value] = {}
+            cursor = cursor[value]
 
     def value(self):
-        value = self._get_value()
-        return value if not isinstance(value, dict) else None
+        content = self._get_content()
+        return content if not isinstance(content, dict) else None
 
     def coordinates(self):
         return self._coordinates

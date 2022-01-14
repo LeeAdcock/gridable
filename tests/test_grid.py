@@ -105,6 +105,7 @@ class TestCell(unittest.TestCase):
         self.assertEqual(str(grid), "[[3],[4],[5,6]]")
         self.assertEqual(str(grid[1]), "[3]")
         self.assertEqual(str(grid[1][2]), "3")
+        self.assertEqual(str(grid[3]), "[5,6]")
 
     def test_contains_value(self):
         grid = Grid()
