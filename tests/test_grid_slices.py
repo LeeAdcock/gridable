@@ -85,7 +85,5 @@ class TestNodeSlices(unittest.TestCase):
         grid = Grid()
         grid[0][10:] = range(5, 7)
 
-        print(grid._root)
-
         self.assertEqual(grid[0][10].value(), 5)
         self.assertEqual(grid[0][11].value(), 6)

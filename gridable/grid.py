@@ -82,7 +82,7 @@ class Cell:
     def __len__(self):
         """Returns the number of included values. Specifically does not count None values."""
         content = self._get_content()
-        return len(content) if isinstance(content, dict) else 1
+        return len(content) if isinstance(content, dict) else 1 if content is not None else 0
 
     @GridReadLock
     def __contains__(self, index):
@@ -113,6 +113,56 @@ class Cell:
             content == other._get_content()
             if isinstance(other, Cell)
             else content == other
+        )
+
+    @GridReadLock
+    def __ne__(self, other):
+        """Return a boolean indicating if this cell is not equal to another cell or its value."""
+        content = self._get_content()
+        return (
+            content != other._get_content()
+            if isinstance(other, Cell)
+            else content != other
+        )
+
+    @GridReadLock
+    def __lt__(self, other):
+        """Return a boolean indicating if this cell is less than another cell or its value."""
+        content = self._get_content()
+        return (
+            content < other._get_content()
+            if isinstance(other, Cell)
+            else content < other
+        )
+
+    @GridReadLock
+    def __le__(self, other):
+        """Return a boolean indicating if this cell is less than or equal to another cell or its value."""
+        content = self._get_content()
+        return (
+            content <= other._get_content()
+            if isinstance(other, Cell)
+            else content <= other
+        )
+
+    @GridReadLock
+    def __gt__(self, other):
+        """Return a boolean indicating if this cell is greater than another cell or its value."""
+        content = self._get_content()
+        return (
+            content < other._get_content()
+            if isinstance(other, Cell)
+            else content < other
+        )
+
+    @GridReadLock
+    def __ge__(self, other):
+        """Return a boolean indicating if this cell is greater than or equal to another cell or its value."""
+        content = self._get_content()
+        return (
+            content >= other._get_content()
+            if isinstance(other, Cell)
+            else content >= other
         )
 
     def _get_content(self):

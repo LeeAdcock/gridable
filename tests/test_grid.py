@@ -29,7 +29,12 @@ class TestCell(unittest.TestCase):
 
         del grid[10]
 
+        print('>>', grid._root)
+
         self.assertEqual(grid[10].value(), None)
+        self.assertEqual(grid[10], None)
+        self.assertEqual(len(grid[10]), 0)
+        self.assertEqual(len(grid), 0)
 
     def test_coordinates(self):
         grid = Grid()
@@ -177,8 +182,6 @@ class TestCell(unittest.TestCase):
     def test_sett_iterable(self):
         grid = Grid()
         grid[0] = range(5, 7)
-
-        print(grid._root)
 
         self.assertEqual(grid[0][0].value(), 5)
         self.assertEqual(grid[0][1].value(), 6)
