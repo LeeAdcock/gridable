@@ -29,7 +29,20 @@ class TestCell(unittest.TestCase):
 
         del grid[10]
 
-        print('>>', grid._root)
+        self.assertEqual(grid[10].value(), None)
+        self.assertEqual(grid[10], None)
+        self.assertEqual(len(grid[10]), 0)
+        self.assertEqual(len(grid), 0)
+
+    def test_delete_nested(self):
+        grid = Grid()
+        grid[10][11] = 5
+
+        del grid[10][11]
+
+        self.assertEqual(grid[10][11].value(), None)
+        self.assertEqual(grid[10][11], None)
+        self.assertEqual(len(grid[10][11]), 0)
 
         self.assertEqual(grid[10].value(), None)
         self.assertEqual(grid[10], None)

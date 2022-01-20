@@ -8,7 +8,7 @@ Storing and retreiving values in the grid can be done through direct indexing, o
 
 The Gridable library can easily be installed with pip using `pip install gridable`.
 
-## Creating a Grid
+## Creating a Grid and Setting Values
 
 Creating a grid can be done through the constructor. Grids have no maximum dimensions, but are populated with `None` values at creation.
 
@@ -29,17 +29,22 @@ grid[6][7] = 8
 grid[7][8][9][10] = 11
 ```
 
-Values placed into the grid can be single values, like above, or any iterable.
-
-```
-grid[5] = [6, 7, 8]
-grid[6] = range(7, 9)
-```
-
-The destination location when setting values can be a slice, which allows defining the start index, and/or the end index, and optionaly the  increment step. Values not included in the slice will retain their existing value.
+The destination location when setting values can be a slice, which allows placing multiple values at once by defining the start index, and/or the end index, and optionaly the increment step. Values not included in the slice will retain their existing value.
 
 ```
 grid[7][5:9:2] = [6, 7, 8]
+```
+
+In addition to single values or arrays, any iterable can provide values to be placed individually into cells.
+
+```
+grid[5][0:] = [6, 7, 8]
+grid[5][0:] = range(7, 8)
+
+# Either of the above is equivalent to setting the values individually.
+grid[5][0] = 6
+grid[5][1] = 7
+grid[5][2] = 8
 ```
 
 ## Working with Cells
@@ -56,10 +61,9 @@ Other convenience methods return the cell's coordinates as a tuple, or provide e
 grid[6][7].coordinates()
 grid[6][7].distance(grid[7][10])
 grid[6][7].neighbors()
-
 ```
 
-Processing through the grid can be done through iteration. All cells function as an iterator for the values they contain, whether it's a single value, or one or more inner dimensions. If a slice is used to specify the cell location, the iterator will return those cells specifically, skipping over cells not included in the slice.
+Processing through the grid can be done through iteration, which returns cells having defined values (not `None`). All cells can ne used as an iterator over the values they contain, whether it's a single value, or one or more inner dimensions. If a slice is used to specify the cell location, the iterator will return those cells specifically, skipping over cells not included in the slice.
 
 ```
 for cell in grid[6]:

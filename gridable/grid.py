@@ -45,6 +45,7 @@ class Cell:
     def __delitem__(self, index):
         """Deletes the contents of a grid cell."""
         del self._get_content()[index]
+        self._prune()
 
     def __getitem__(self, index):
         """Get the contents of a grid cell."""
@@ -82,7 +83,13 @@ class Cell:
     def __len__(self):
         """Returns the number of included values. Specifically does not count None values."""
         content = self._get_content()
-        return len(content) if isinstance(content, dict) else 1 if content is not None else 0
+        return (
+            len(content)
+            if isinstance(content, dict)
+            else 1
+            if content is not None
+            else 0
+        )
 
     @GridReadLock
     def __contains__(self, index):
@@ -180,6 +187,15 @@ class Cell:
             if value not in cursor:
                 cursor[value] = {}
             cursor = cursor[value]
+
+    @GridModifyLock
+    def _prune(self):
+        """Prune any unneccessary storage locations"""
+        cursor = self._root
+        for value in self._coordinates:
+            if len(cursor[value]) == 0:
+                del cursor[value]
+                return
 
     @GridReadLock
     def value(self):
